@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/navbar";
+import { useNavigate } from "react-router-dom";
 
 const WEATHER_API_KEY = process.env.REACT_APP_WEATHER_API_KEY ;
 
@@ -24,6 +25,10 @@ export default function PredictionPage() {
   const [loadingPredict, setLoadingPredict] = useState(false);
   const [result, setResult] = useState(null);
   const [errorPredict, setErrorPredict] = useState(null);
+
+  //use navigate 
+  const navigate = useNavigate();
+
 
   // On mount: ask for geolocation and fetch weather
   useEffect(() => {
@@ -80,42 +85,59 @@ export default function PredictionPage() {
 
   // Prediction POST — replace URL with your backend endpoint (FastAPI)
   async function handlePredict(e) {
-    e.preventDefault();
-    setLoadingPredict(true);
-    setErrorPredict(null);
-    setResult(null);
+  e.preventDefault();
+  setLoadingPredict(true);
+  setErrorPredict(null);
 
-    // Prepare payload — match backend expectation
-    const payload = {
-      Temperature: Number(temperature),
-      Humidity: Number(humidity),
-      Moisture: Number(moisture),
-      SoilType: soilType,
-      CropType: cropType,
-    };
+  const payload = {
+    Temperature: Number(temperature),
+    Humidity: Number(humidity),
+    Moisture: Number(moisture),
+    SoilType: soilType,
+    CropType: cropType,
+  };
 
-    try {
-      // NOTE: change this to your backend host: e.g. http://localhost:8000/predict
-      const res = await fetch("/api/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  try {
+    const res = await fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Prediction failed");
-      }
-      const json = await res.json();
-      // expected backend response sample:
-      // { nitrogen: 45.2, phosphorous: 12.3, potassium: 30.4, fertilizer: "Urea" }
-      setResult(json);
-    } catch (err) {
-      setErrorPredict(err.message || "Prediction error");
-    } finally {
-      setLoadingPredict(false);
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Prediction failed");
     }
+
+    const json = await res.json();
+
+    // 🚀 Navigate to results page
+    navigate("/results", {
+      state: {
+        nitrogen: json.nitrogen,
+        phosphorous: json.phosphorous,
+        potassium: json.potassium,
+        fertilizer: json.fertilizer,
+        explanation: json.explanation,
+      
+      features: {
+      temperature,
+      humidity,
+      moisture,
+      soilType,
+      cropType,
+    },
+  },
+    
+    });
+
+  } catch (err) {
+    setErrorPredict(err.message || "Prediction error");
+  } finally {
+    setLoadingPredict(false);
   }
+}
+
 
   return (
 
@@ -360,6 +382,9 @@ export default function PredictionPage() {
           </div>
         </aside>
       </div>
+      <footer className="text-center py-6 text-[#556b2f] bg-[#e6e1d5] mt-12 rounded-t-lg">
+        © {new Date().getFullYear()} SoilIQ. All Rights Reserved.
+      </footer>
     </div>
     </>
   );
