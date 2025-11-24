@@ -70,7 +70,6 @@ export default function PredictionPage() {
       };
       setWeather(w);
       setLocationName(data.name || "");
-      // Prefill form fields (you can disable if you want users to manually enter)
       setTemperature(String(Math.round(w.temp)));
       setHumidity(String(w.humidity));
       // moisture isn't available from weather API — we can guess or leave blank

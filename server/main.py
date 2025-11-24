@@ -11,13 +11,17 @@ from src.preprocess import feature_engineering
 from fertilizer_logic import recommend_fertilizer
 from fastapi.responses import StreamingResponse
 from report_generator import generate_report_pdf
+from routes.auth_routes import router as auth_router
 
 app = FastAPI()
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
 
 # for react to access backend API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["http://localhost:3000"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
